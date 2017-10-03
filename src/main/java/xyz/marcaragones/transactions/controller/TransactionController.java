@@ -1,10 +1,10 @@
 package xyz.marcaragones.transactions.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import xyz.marcaragones.transactions.dto.TransactionDTO;
 import xyz.marcaragones.transactions.service.transaction.TransactionService;
+import xyz.marcaragones.transactions.util.TimeUtil;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -15,8 +15,11 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private TimeUtil timeUtil;
+
     @RequestMapping(value = "/transactions", method = RequestMethod.POST)
-    public void transactions(TransactionDTO body, HttpServletResponse response) {
+    public void transactions(@RequestBody TransactionDTO body, HttpServletResponse response) {
         if (isValidTimestamp(body.getTimestamp())) {
             transactionService.commit(body);
             response.setStatus(HttpServletResponse.SC_CREATED);
@@ -26,6 +29,6 @@ public class TransactionController {
     }
 
     private boolean isValidTimestamp(Long timestamp) {
-        return true;
+        return timeUtil.isTimestampLessThanOneMinuteOld(timestamp);
     }
 }
