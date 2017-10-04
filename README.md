@@ -1,6 +1,18 @@
 # Transactions
 This API collects transactions and returns statistics.
 
+## Usage
+
+Install dependencies and run tests.
+```bash
+mvn clean install
+```
+
+Run the application.
+```bash
+mvn spring-boot:run
+```
+
 ## API
 
 ### Add transaction
