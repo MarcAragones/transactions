@@ -8,7 +8,11 @@ public class TimeUtil {
     private static final long ONE_MINUTE = 60 * 1000;
 
     public boolean isTimestampLessThanOneMinuteOld(Long timestamp) {
-        long oneMinuteAgo = System.currentTimeMillis() - ONE_MINUTE;
+        long oneMinuteAgo = getOneMinuteAgo();
         return oneMinuteAgo < timestamp;
+    }
+
+    public long getOneMinuteAgo() {
+        return System.currentTimeMillis() - ONE_MINUTE;
     }
 }

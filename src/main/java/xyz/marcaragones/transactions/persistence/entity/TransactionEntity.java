@@ -1,15 +1,13 @@
 package xyz.marcaragones.transactions.persistence.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "transaction")
 public class TransactionEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private double amount;
     private long timestamp;

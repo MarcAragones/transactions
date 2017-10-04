@@ -3,10 +3,10 @@ package xyz.marcaragones.transactions.service.statistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import xyz.marcaragones.transactions.dto.StatisticsDTO;
-import xyz.marcaragones.transactions.persistence.entity.TransactionEntity;
 import xyz.marcaragones.transactions.persistence.repository.TransactionDAO;
+import xyz.marcaragones.transactions.util.TimeUtil;
 
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StatisticsServiceImpl implements StatisticsService {
@@ -14,16 +14,18 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Autowired
     TransactionDAO transactionDAO;
 
+    @Autowired
+    TimeUtil timeUtil;
+
     @Override
     public StatisticsDTO get() {
-        StatisticsDTO statisticsDTO = new StatisticsDTO();
+        long oneMinuteAgo = timeUtil.getOneMinuteAgo();
 
-        TransactionEntity max = transactionDAO.findFirstByOrderByAmountDesc();
+        return getStatisticsSinceTimestamp(oneMinuteAgo);
+    }
 
-        if (max != null) {
-            statisticsDTO.setMax(max.getAmount());
-        }
-
-        return statisticsDTO;
+    @Transactional(readOnly = true)
+    private StatisticsDTO getStatisticsSinceTimestamp(long ts) {
+        return transactionDAO.findStatisticsSinceTimestamp(ts);
     }
 }
