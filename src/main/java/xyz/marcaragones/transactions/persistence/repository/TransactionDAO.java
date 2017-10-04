@@ -19,4 +19,10 @@ public interface TransactionDAO extends JpaRepository<TransactionEntity, Long> {
             ")" +
             " FROM TransactionEntity WHERE timestamp > :timestamp")
     StatisticsDTO findStatisticsSinceTimestamp(@Param("timestamp") long timestamp);
+
+    @Query("SELECT COALESCE(MAX(amount), 0) FROM TransactionEntity WHERE timestamp > :timestamp")
+    double findMaxAmountSinceTimestamp(@Param("timestamp") long timestamp);
+
+    @Query("SELECT COALESCE(MIN(amount), 1.7976931348623157E+308) FROM TransactionEntity WHERE timestamp > :timestamp")
+    double findMinAmountSinceTimestamp(@Param("timestamp") long timestamp);
 }

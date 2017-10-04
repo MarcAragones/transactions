@@ -1,0 +1,1 @@
+INSERT INTO statistics (id, sum, max, min, count) VALUES (0, 0, 0, 1.7976931348623157E+308, 0);

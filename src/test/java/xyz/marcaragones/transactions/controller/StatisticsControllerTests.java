@@ -11,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import xyz.marcaragones.transactions.dto.StatisticsDTO;
 import xyz.marcaragones.transactions.dto.TransactionDTO;
+import xyz.marcaragones.transactions.persistence.entity.StatisticsEntity;
+import xyz.marcaragones.transactions.persistence.repository.StatisticsDAO;
 import xyz.marcaragones.transactions.persistence.repository.TransactionDAO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -33,14 +35,23 @@ public class StatisticsControllerTests {
     @Autowired
     TransactionDAO transactionDAO;
 
+    @Autowired
+    StatisticsDAO statisticsDAO;
+
     @Before
     public void beforeEach() {
         transactionDAO.deleteAll();
+        statisticsDAO.deleteAll();
+        StatisticsEntity entity = new StatisticsEntity();
+        entity.setMin(Double.MAX_VALUE);
+        statisticsDAO.saveAndFlush(entity);
     }
 
     @Test
     public void statistics_return_empty_response_when_no_transactions() {
-        StatisticsDTO statisticsDTO = aStatisticsDTOBuilder().build();
+        StatisticsDTO statisticsDTO = aStatisticsDTOBuilder()
+                .withMin(Double.MAX_VALUE)
+                .build();
         String response = gson.toJson(statisticsDTO);
 
         given()
@@ -147,6 +158,72 @@ public class StatisticsControllerTests {
                 .withAmount(oldAmount)
                 .withTimestamp(almostOneMinAgo)
                 .build();
+
+        given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .body(transactionDTO)
+                .when()
+                .post("/transactions")
+                .then()
+                .statusCode(HttpServletResponse.SC_CREATED);
+
+        TransactionDTO transactionDTO2 = aTransactionDTOBuilder()
+                .withAmount(newAmount)
+                .withTimestamp(System.currentTimeMillis())
+                .build();
+
+        given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .body(transactionDTO2)
+                .when()
+                .post("/transactions")
+                .then()
+                .statusCode(HttpServletResponse.SC_CREATED);
+
+        StatisticsDTO statisticsDTO = aStatisticsDTOBuilder()
+                .withSum(newAmount)
+                .withAvg(newAmount)
+                .withMax(newAmount)
+                .withMin(newAmount)
+                .withCount(1)
+                .build();
+        String response = gson.toJson(statisticsDTO);
+
+        try {
+            // Wait to discard the old transaction
+            Thread.sleep(60 * 1000 - millisAgo);
+        } catch (Exception e) {}
+
+        given()
+                .port(port)
+                .when()
+                .get("/statistics")
+                .then()
+                .statusCode(HttpServletResponse.SC_OK)
+                .body(equalTo(response));
+    }
+
+    @Test
+    public void statistics_when_two_transactions_are_one_min_old() {
+        double oldAmount = 5;
+        double newAmount = 10;
+        long millisAgo = 58 * 1000;
+        long almostOneMinAgo = System.currentTimeMillis() - millisAgo;
+        TransactionDTO transactionDTO = aTransactionDTOBuilder()
+                .withAmount(oldAmount)
+                .withTimestamp(almostOneMinAgo)
+                .build();
+
+        given()
+                .port(port)
+                .contentType(ContentType.JSON)
+                .body(transactionDTO)
+                .when()
+                .post("/transactions")
+                .then()
+                .statusCode(HttpServletResponse.SC_CREATED);
 
         given()
                 .port(port)
